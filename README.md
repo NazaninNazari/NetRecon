@@ -1,5 +1,5 @@
 # N0aziXss NetRecon 🍓
-# NetRecon - Professional Network Reconnaissance Tool
+## NetRecon - Professional Network Reconnaissance Tool
 
 ## 🌟 Introduction
 **N0aziXss NetRecon**
