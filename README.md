@@ -93,7 +93,7 @@ python netrecon.py --ethics       # Show ethical guidelines
 ╰────────────────────────────────────────────────────────────────╯ -->
 
 ## JSON Format
-<!-- {
+{
   "Domain Name": "example.com",
   "Registrar": "NameCheap, Inc.",
   "Creation Date": "1995-08-14T04:00:00Z",
@@ -117,13 +117,13 @@ python netrecon.py --ethics       # Show ethical guidelines
       "\"google-site-verification=ABC123\""
     ]
   }
-} -->
+}
 
 ## Ethics
-<!-- [ Ethical Guidelines ]
+[ Ethical Guidelines ]
 1. Use this tool ONLY for authorized security assessments.
 2. Never scan domains/IPs without explicit permission.
 3. Respect data privacy laws (GDPR, HIPAA).
 4. Do not use for malicious purposes.
 5. Limit query rates to avoid overloading servers.
-6. Always comply with local and international laws. -->
+6. Always comply with local and international laws.
