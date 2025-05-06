@@ -2,8 +2,7 @@
 ## NetRecon - Professional Network Reconnaissance Tool
 
 ## 🌟 Introduction
-**N0aziXss NetRecon**
-A powerful yet ethical WHOIS and network reconnaissance tool for security professionals.
+**N0aziXss NetRecon** A powerful yet ethical WHOIS and network reconnaissance tool for security professionals.
 
 ## Features
 - Comprehensive WHOIS lookups for domains and IPs
@@ -15,6 +14,9 @@ A powerful yet ethical WHOIS and network reconnaissance tool for security profes
 - Proxy support for anonymity
 - JSON output support
 
+```bash
+pip install colorama
+python netrecon.py
 
 # clone the repository
 git clone https://github.com/NazaninNazari/NetRecon.git
@@ -45,7 +47,7 @@ python netrecon.py --ethics       # Show ethical guidelines
 # Sample Output
 ## Domain Lookup
 🍓Professional NetRecon Tool - Secure & Ethical🍓
-<!-- 
+
 ╭──────────────────────── WHOIS Results ────────────────────────╮
 │ Field           Value                                         │
 │ Domain Name     example.com                                   │
@@ -61,19 +63,18 @@ python netrecon.py --ethics       # Show ethical guidelines
 │ Name Servers    ns1.example.com                               │
 │                 ns2.example.com                               │
 │ Status          clientTransferProhibited                      │
-╰───────────────────────────────────────────────────────────────╯ -->
+╰───────────────────────────────────────────────────────────────╯
 
-<!-- 
 ╭──────────────────────── DNS Records ──────────────────────────╮
 │ Record Type   Value                                           │
 │ A            93.184.216.34                                    │
 │ MX           10 mail.example.com                              │
 │ TXT          "v=spf1 include:_spf.example.com ~all"           │
 │ TXT          "google-site-verification=ABC123"                │
-╰───────────────────────────────────────────────────────────────╯ -->
+╰───────────────────────────────────────────────────────────────╯
 
 ## IP Lookup
-<!-- ╭────────────────── IP Information for 8.8.8.8 ──────────────────╮
+╭────────────────── IP Information for 8.8.8.8 ──────────────────╮
 │ Field               Value                                      │
 │ IP Address         8.8.8.8                                     │
 │ PTR Record         dns.google                                  │
@@ -90,7 +91,7 @@ python netrecon.py --ethics       # Show ethical guidelines
 │                    drive.google.com                            │
 │                    calendar.google.com                         │
 │ Open Ports         53, 80, 443                                 │
-╰────────────────────────────────────────────────────────────────╯ -->
+╰────────────────────────────────────────────────────────────────╯
 
 ## JSON Format
 {
