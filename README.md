@@ -20,7 +20,7 @@ python netrecon.py
 
 # clone the repository
 git clone https://github.com/NazaninNazari/NetRecon.git
-cd N0aziXss-NetRecon
+cd NetRecon-tools
 
 # install dependencies
 pip install -r requirements.txt
