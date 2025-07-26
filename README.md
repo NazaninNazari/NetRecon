@@ -1,24 +1,24 @@
-# N0aziXss NetRecon 🍓
+# N0aziXss NetRecon v3.1 🍓
 ## NetRecon - Professional Network Reconnaissance Tool
 
 ## 🌟 Introduction
 **N0aziXss NetRecon** A powerful yet ethical WHOIS and network reconnaissance tool for security professionals.
 
-## Features
+## Features ✨
 - Comprehensive WHOIS lookups for domains and IPs
 - DNS record retrieval (A, MX, TXT, SOA, etc.)
 - Reverse IP lookups to find associated domains
-- Common port scanning
+- Common port scanning (21, 22, 80, 443, etc.)
 - Beautiful console output with rich formatting
 - Rate limiting to prevent abuse
 - Proxy support for anonymity
-- JSON output support
+- JSON/CSV output support
+
+## Requirements ⚙️
+- Python 3.8+
+- Required libraries: `pip install -r requirements.txt`
 
 ```bash
-pip install colorama
-python netrecon.py
-
-# clone the repository
 git clone https://github.com/NazaninNazari/NetRecon.git
 cd NetRecon-tools
 
@@ -28,26 +28,45 @@ pip install -r requirements.txt
 # run the scanner
 python netrecon.py
 
-# Usage Example:
-python netrecon.py -d example.com  # Basic domain lookup
-python netrecon.py -d 8.8.8.8     # IP address lookup
-python netrecon.py -d example.com --dns A MX TXT  # With DNS records
-python netrecon.py -d example.com -o result.json  # Save to JSON
-python netrecon.py --ethics       # Show ethical guidelines
+# Usage
+1.Basic domain lookup
+```bash
+python netrecon.py -d example.com
 
-# Options
--h, --help            show help message
--d DOMAIN, --domain   target domain or IP
--o OUTPUT, --output   save results to JSON file
---raw                 show raw response
---proxy PROXY         use proxy (http://user:pass@host:port)
---dns [RECORDS...]    get DNS records (A, MX, TXT, etc.)
---ethics              show ethical guidelines
+2.IP address lookup
+```bash
+python netrecon.py -d 8.8.8.8
+
+3.With DNS records
+```bash
+python netrecon.py -d example.com --dns A MX TXT
+
+4.Save to JSON
+```bash
+python netrecon.py -d example.com -o result.json
+
+5.Save to CVS
+```bash
+python netrecon.py -d example.com -o result.cvs
+
+6.Show ethical guidelines
+```bash
+python netrecon.py --ethics
+
+
+## Options
+-h & --help --> Show help message
+-d & --domain --> Target domain or IP
+-o & --output --> Save results to file (JSON/CSV)
+--raw --> Show raw response
+--proxy --> Use proxy (http://user:pass@host:port)
+--dns --> Get DNS records (A, MX, TXT, etc.)
+--ethics --> Show ethical guidelines
+--no-log --> Disable logging
 
 # Sample Output
 ## Domain Lookup
-🍓Professional NetRecon Tool - Secure & Ethical🍓
-
+      🍓Professional NetRecon Tool - Secure & Ethical🍓
 ╭──────────────────────── WHOIS Results ────────────────────────╮
 │ Field           Value                                         │
 │ Domain Name     example.com                                   │

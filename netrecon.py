@@ -6,6 +6,7 @@ import tldextract
 import logging
 import dns.resolver
 import requests
+import random
 from colorama import Fore, init
 from pyfiglet import Figlet
 from ratelimit import limits, sleep_and_retry
@@ -23,14 +24,6 @@ print(Fore.CYAN + "♦*"*27)
 print(Fore.YELLOW + "🍓Professional NetRecon Tool - Secure & Ethical🍓")
 print(Fore.CYAN + "♦*"*27 + "\n")
 
-# Logging
-logging.basicConfig(
-    filename='whois_audit.log',
-    level=logging.INFO,
-    format='%(asctime)s - %(message)s',
-    datefmt='%d-%b-%y %H:%M:%S'
-)
-
 class WhoisClient:
     def __init__(self, timeout=5, proxy=None):
         self.timeout = timeout
@@ -40,7 +33,16 @@ class WhoisClient:
             'net': 'whois.verisign-grs.com',
             'org': 'whois.pir.org',
             'ir': 'whois.nic.ir',
+            'io': 'whois.nic.io',
+            'ai': 'whois.nic.ai',
+            'cloud': 'whois.nic.cloud',
+            'gov': 'whois.dotgov.gov',
         }
+        self.user_agents = [
+            'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+            'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.0.3 Safari/605.1.15',
+            'Mozilla/5.0 (Linux; Android 10; Pixel 4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.120 Mobile Safari/537.36'
+        ]
 
     def GetWhoisServer(self, TLD):
         return self.WhoisServers.get(TLD, 'whois.iana.org')
@@ -49,10 +51,13 @@ class WhoisClient:
     @limits(calls=3, period=60)
     def Query(self, target):
         """Query for domain or IP"""
-        if self.IsIP(target):
-            return self.IPLookup(target)
-        else:
+        try:
+            if self.IsIP(target):
+                return self.IPLookup(target)
             return self.DomainLookup(target)
+        except Exception as e:
+            logging.error(f"Query failed: {str(e)}")
+            raise ValueError(f"{Fore.RED}Query Error: {str(e)}")
 
     def DomainLookup(self, domain):
         """WHOIS query for domain"""
@@ -89,17 +94,15 @@ class WhoisClient:
                 "PTR Record": self.GetPTRRecord(ip),
                 "WHOIS Info": self.GetIPWhois(ip),
                 "Associated Domains": self.FindAssociatedDomains(ip),
-                "Open Ports": self.CheckCommonPorts(ip)
+                "Open Ports": self.CheckCommonPorts(ip),
+                "CDN Detection": self.DetectCDN(ip)
             }
             
             return result
             
         except Exception as e:
             logging.error(f"IP lookup failed: {str(e)}")
-            raise ValueError(f"{Fore.RED}IP lookup failed: {str(e)}\n"
-                            f"Possible solutions:\n"
-                            f"1. Try again later\n"
-                            f"2. Use manual method: whois {ip}")
+            raise ValueError(f"{Fore.RED}IP lookup failed: {str(e)}")
 
     def GetPTRRecord(self, ip):
         """Get PTR record for IP"""
@@ -129,19 +132,20 @@ class WhoisClient:
     def FindAssociatedDomains(self, ip):
         """Find domains associated with IP"""
         try:
+            headers = {'User-Agent': random.choice(self.user_agents)}
             url = f"https://api.hackertarget.com/reverseiplookup/?q={ip}"
             response = requests.get(
                 url,
                 proxies=self.proxy,
                 timeout=10,
-                headers={'User-Agent': 'Mozilla/5.0'}
+                headers=headers
             )
             
             if response.status_code == 200:
                 domains = [d.strip() for d in response.text.split('\n') if d.strip()]
                 return {
                     "Domain Count": len(domains),
-                    "Sample Domains": domains[:10]  # Show first 10 domains
+                    "Sample Domains": domains[:10]
                 }
             return "No domains found"
         except Exception as e:
@@ -150,7 +154,7 @@ class WhoisClient:
 
     def CheckCommonPorts(self, ip):
         """Check common open ports"""
-        common_ports = [21, 22, 23, 25, 53, 80, 110, 143, 443, 465, 587, 993, 995, 3306, 3389]
+        common_ports = [21, 22, 23, 25, 53, 80, 110, 143, 443, 465, 587, 993, 995, 2082, 2083, 2086, 2087, 2095, 2096, 3306, 3389, 8080, 8443, 8888]
         open_ports = []
         
         for port in common_ports:
@@ -160,17 +164,35 @@ class WhoisClient:
                     result = s.connect_ex((ip, port))
                     if result == 0:
                         open_ports.append(port)
-            except:
+            except socket.error as e:
+                logging.warning(f"Port {port} scan failed: {str(e)}")
                 continue
                 
         return open_ports if open_ports else "No common ports open"
 
+    def DetectCDN(self, target):
+        """Detect CDN/WAF"""
+        try:
+            headers = {'User-Agent': random.choice(self.user_agents)}
+            response = requests.get(
+                f"http://{target}",
+                headers=headers,
+                timeout=5,
+                allow_redirects=False
+            )
+            server_header = response.headers.get('Server', '').lower()
+            cdn_clues = ['cloudflare', 'akamai', 'fastly', 'sucuri']
+            for clue in cdn_clues:
+                if clue in server_header:
+                    return f"Detected: {clue.upper()}"
+            return "No CDN detected"
+        except:
+            return "CDN check failed"
+
     def IsIP(self, target):
-        """Check if target is IP address"""
         return self.IsValidIP(target)
 
     def IsValidIP(self, address):
-        """Validate IP address"""
         try:
             socket.inet_aton(address)
             return True
@@ -178,24 +200,19 @@ class WhoisClient:
             return False
 
     def ValidateDomain(self, domain):
-        """Validate domain format"""
-        domain_pattern = r'''
-            ^(?!-)[A-Za-z0-9-]{1,63}(\.[A-Za-z0-9-]{1,63})*
-            \.(?!-)[A-Za-z0-9-]{2,63}(?<!-)$
-        '''
+        domain_pattern = r'''^(?!-)[A-Za-z0-9-]{1,63}(?<!-)(\.[A-Za-z0-9-]{1,63})*\.(?!-)[A-Za-z0-9-]{2,63}(?<!-)$'''
         cleaned_domain = re.sub(r'^https?://|/.*$', '', domain.strip().lower())
 
         if not re.fullmatch(domain_pattern, cleaned_domain, re.VERBOSE):
-            raise ValueError(f"{Fore.RED}Invalid domain! Pattern: example.com/sub.example.co.uk")
+            raise ValueError(f"{Fore.RED}Invalid domain format")
         
         extracted = tldextract.extract(cleaned_domain)
         if not extracted.suffix:
-            raise ValueError(f"{Fore.RED}Invalid TLD!")
+            raise ValueError(f"{Fore.RED}Invalid TLD")
         
         return cleaned_domain
 
     def GetDNSRecords(self, domain, record_type='A'):
-        """Get DNS records with improved error handling"""
         try:
             resolver = dns.resolver.Resolver()
             resolver.timeout = 3
@@ -205,8 +222,7 @@ class WhoisClient:
             answers = resolver.resolve(domain, record_type)
             
             if record_type == 'TXT':
-                records = [' '.join(txt.decode() for txt in answer.strings) 
-                          for answer in answers]
+                records = [' '.join(txt.decode() for txt in answer.strings) for answer in answers]
             elif record_type == 'SOA':
                 records = [str(answer).replace('\n', ' ') for answer in answers]
             else:
@@ -215,18 +231,18 @@ class WhoisClient:
             logging.info(f"DNS query success for {domain} ({record_type})")
             return {record_type: records}
             
+        except dns.resolver.NoNameservers:
+            return {record_type: ["No nameservers found"]}
         except dns.resolver.NoAnswer:
             return {record_type: ["No records found"]}
-        except dns.resolver.NXDOMAIN:
-            return {record_type: ["Domain not found"]}
         except dns.exception.Timeout:
-            return {record_type: ["DNS timeout (check connection)"]}
+            return {record_type: ["DNS timeout"]}
         except Exception as e:
-            logging.error(f"DNS query failed ({record_type}): {str(e)}")
-            raise ValueError(f"{Fore.RED}DNS Error ({record_type}): {str(e)}")
+            logging.error(f"DNS Error ({record_type}): {str(e)}")
+            return {record_type: [f"DNS Error: {str(e)}"]}
 
     def ParseWhoisResponse(self, response):
-        """Parse WHOIS response with enhanced field extraction"""
+        """Parse WHOIS response with all data"""
         parsed = {}
         contact_fields = {
             'organization': 'Organization',
@@ -275,7 +291,6 @@ class WhoisClient:
         return parsed
 
     def ParseIPWhois(self, response):
-        """Parse IP WHOIS response"""
         parsed = {}
         important_fields = {
             'netname': 'Network Name',
@@ -298,17 +313,15 @@ class WhoisClient:
         return parsed if parsed else "No WHOIS information found"
 
 def PrintResults(data, title="WHOIS Results"):
-    """Print results in formatted tables"""
-    if "IP Address" in data:  # IP lookup results
-        ip_table = Table(title=f"IP Information for {data['IP Address']}", 
-                        show_header=True, header_style="bold magenta")
+    if "IP Address" in data:
+        ip_table = Table(title=f"IP Information for {data['IP Address']}", show_header=True, header_style="bold magenta")
         ip_table.add_column("Field", style="cyan", width=20)
         ip_table.add_column("Value", style="white")
         
         ip_table.add_row("IP Address", data["IP Address"])
         ip_table.add_row("PTR Record", data.get("PTR Record", "Not found"))
+        ip_table.add_row("CDN Detection", data.get("CDN Detection", "Not checked"))
         
-        # Display WHOIS info
         whois_info = data.get("WHOIS Info", {})
         if isinstance(whois_info, dict):
             for key, value in whois_info.items():
@@ -316,7 +329,6 @@ def PrintResults(data, title="WHOIS Results"):
         else:
             ip_table.add_row("WHOIS Info", str(whois_info))
         
-        # Display associated domains
         domains_info = data.get("Associated Domains", {})
         if isinstance(domains_info, dict):
             ip_table.add_row("Domain Count", str(domains_info.get("Domain Count", 0)))
@@ -324,15 +336,12 @@ def PrintResults(data, title="WHOIS Results"):
             if sample_domains:
                 ip_table.add_row("Sample Domains", "\n".join(sample_domains))
         
-        # Display open ports
         open_ports = data.get("Open Ports", [])
         if isinstance(open_ports, list):
             ip_table.add_row("Open Ports", ", ".join(map(str, open_ports)) if open_ports else "None")
-        else:
-            ip_table.add_row("Open Ports", str(open_ports))
         
         console.print(ip_table)
-    else:  # Domain WHOIS results
+    else:
         whois_table = Table(title=title, show_header=True, header_style="bold magenta")
         whois_table.add_column("Field", style="cyan", width=20)
         whois_table.add_column("Value", style="white")
@@ -359,14 +368,36 @@ def PrintResults(data, title="WHOIS Results"):
             console.print("\n")
             console.print(dns_table)
 
+def ExportToCSV(data, filename):
+    try:
+        import csv
+        with open(filename, 'w', newline='') as f:
+            writer = csv.writer(f)
+            if "IP Address" in data:
+                writer.writerow(["Field", "Value"])
+                for key, value in data.items():
+                    if isinstance(value, dict):
+                        for k, v in value.items():
+                            writer.writerow([f"{key}.{k}", v])
+                    else:
+                        writer.writerow([key, value])
+            else:
+                writer.writerow(["Field", "Value"])
+                for key, value in data.items():
+                    writer.writerow([key, value])
+        console.print(f"[+] CSV saved to {filename}", style="green")
+    except Exception as e:
+        console.print(f"CSV Error: {str(e)}", style="red")
+
 def Main():
-    parser = argparse.ArgumentParser(description='N0aziXss WHOIS Tool')
+    parser = argparse.ArgumentParser(description='N0aziXss NetRecon Tool')
     parser.add_argument('-d', '--domain', help='Target (domain or IP address)')
-    parser.add_argument('-o', '--output', help='Save result to JSON file')
+    parser.add_argument('-o', '--output', help='Save result to file (JSON/CSV)')
     parser.add_argument('--raw', action='store_true', help='Show raw response')
     parser.add_argument('--proxy', help='Proxy URL (e.g., http://user:pass@host:port)')
     parser.add_argument('--dns', nargs='+', help='Get DNS records (e.g., A, MX, TXT, SOA, CNAME, AAAA)')
     parser.add_argument('--ethics', action='store_true', help='Show ethical guidelines')
+    parser.add_argument('--no-log', action='store_true', help='Disable logging')
     args = parser.parse_args()
 
     if args.ethics:
@@ -376,8 +407,17 @@ def Main():
         2. Never scan domains/IPs without explicit permission.
         3. Respect data privacy laws (GDPR, HIPAA).
         4. Do not use for malicious purposes.
+        5. Limit query rates to avoid overloading servers.
         """)
         return
+
+    if not args.no_log:
+        logging.basicConfig(
+            filename='whois_audit.log',
+            level=logging.INFO,
+            format='%(asctime)s - %(message)s',
+            datefmt='%d-%b-%y %H:%M:%S'
+        )
 
     client = WhoisClient(proxy=args.proxy)
     
@@ -397,11 +437,14 @@ def Main():
             else:
                 PrintResults(result)
         
-        if args.output:
-            with open(args.output, 'w') as f:
-                json.dump(result, f, indent=2)
-            console.print(f"\n[+] Results saved to {args.output}", style="green")
-            
+            if args.output:
+                if args.output.endswith('.csv'):
+                    ExportToCSV(result, args.output)
+                else:
+                    with open(args.output, 'w') as f:
+                        json.dump(result, f, indent=2)
+                    console.print(f"\n[+] Results saved to {args.output}", style="green")
+                    
     except Exception as e:
         console.print(f"Error: {str(e)}", style="bold red")
         if "IP lookup failed" in str(e):
