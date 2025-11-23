@@ -17,12 +17,32 @@ from rich.table import Table
 init(autoreset=True)
 console = Console()
 
-# Banner
-BANNER = Figlet(font='slant').renderText('NetRecon')
-console.print(Fore.CYAN + BANNER)
-print(Fore.CYAN + "♦*"*27)
-print(Fore.YELLOW + "🍓Professional NetRecon Tool - Secure & Ethical🍓")
-print(Fore.CYAN + "♦*"*27 + "\n")
+# Banner_One
+PURPLE = '\033[0;35m' 
+END = "\033[0m"
+
+banner = f"""
+  {PURPLE}
+    ███╗   ██╗ █████╗ ███████╗██╗██╗  ██╗███████╗███████╗                 
+    ████╗  ██║██╔══██╗╚══███╔╝██║╚██╗██╔╝██╔════╝██╔════╝                 
+    ██╔██╗ ██║███████║  ███╔╝ ██║ ╚███╔╝ ███████╗███████╗                 
+    ██║╚██╗██║██╔══██║ ███╔╝  ██║ ██╔██╗ ╚════██║╚════██║                 
+    ██║ ╚████║██║  ██║███████╗██║██╔╝ ██╗███████║███████║                 
+    ╚═╝  ╚═══╝╚═╝  ╚═╝╚══════╝╚═╝╚═╝  ╚═╝╚══════╝╚══════╝                 
+                                                                          
+    ███╗   ██╗███████╗████████╗██████╗ ███████╗ ██████╗ ██████╗ ███╗   ██╗
+    ████╗  ██║██╔════╝╚══██╔══╝██╔══██╗██╔════╝██╔════╝██╔═══██╗████╗  ██║
+    ██╔██╗ ██║█████╗     ██║   ██████╔╝█████╗  ██║     ██║   ██║██╔██╗ ██║
+    ██║╚██╗██║██╔══╝     ██║   ██╔══██╗██╔══╝  ██║     ██║   ██║██║╚██╗██║
+    ██║ ╚████║███████╗   ██║   ██║  ██║███████╗╚██████╗╚██████╔╝██║ ╚████║
+    ╚═╝  ╚═══╝╚══════╝   ╚═╝   ╚═╝  ╚═╝╚══════╝ ╚═════╝ ╚═════╝ ╚═╝  ╚═══╝ """
+
+print(banner)
+
+# Banner_Two
+print(Fore.CYAN + "♦*"*26)
+print(Fore.YELLOW + "🍓 Professional NetRecon Tool - Secure & Ethical 🍓")
+print(Fore.CYAN + "♦*"*26 + "\n")
 
 class WhoisClient:
     def __init__(self, timeout=5, proxy=None):
